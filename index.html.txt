@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Flashcards for Primary School (ป.1 - ป.6)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Prompt & Fredoka -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tone.js for Web Audio Synth Effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            pink: '#FF6B8B',
+                            yellow: '#FFD166',
+                            green: '#06D6A0',
+                            blue: '#118AB2',
+                            purple: '#8338EC',
+                            dark: '#073B4C'
+                        }
+                    },
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        prompt: ['Prompt', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #F8F9FA;
+            background-image: radial-gradient(#E2E8F0 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+        }
+        
+        .font-kids {
+            font-family: 'Fredoka', 'Prompt', sans-serif;
+        }
+
+        /* 3D Card Flip Animation */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between selection:bg-brand-yellow">
+
+    <!-- Header Navigation -->
+    <header class="bg-white border-b-4 border-brand-yellow shadow-sm sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="resetToHome()">
+                <div class="w-10 h-10 rounded-2xl bg-brand-pink text-white flex items-center justify-center text-2xl font-bold shadow-md animate-bounce">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold font-kids text-brand-purple leading-tight">Kids Cards & AI Dict</h1>
+                    <p class="text-xs text-slate-500 font-medium">พจนานุกรม & แฟลชการ์ด ป.1 - ป.6</p>
+                </div>
+            </div>
+
+            <!-- Global Actions -->
+            <div class="flex items-center space-x-2 md:space-x-3">
+                <button id="speechSpeedBtn" onclick="toggleSpeechSpeed()" class="px-2.5 py-1.5 rounded-xl bg-purple-50 text-brand-purple border border-purple-200 text-xs font-bold hover:bg-purple-100 transition flex items-center gap-1">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span id="speechSpeedText">เร็ว: ปกติ</span>
+                </button>
+                <button id="soundToggleBtn" onclick="toggleMute()" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition shadow-sm">
+                    <i id="soundIcon" class="fa-solid fa-volume-high text-lg"></i>
+                </button>
+                <div class="hidden sm:flex items-center bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200 text-amber-700 font-kids font-bold text-sm">
+                    <i class="fa-solid fa-star text-brand-yellow mr-1.5 text-base"></i>
+                    <span id="globalScoreDisplay">0</span> PTS
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-5xl mx-auto px-4 py-6 flex-grow w-full">
+
+        <!-- STEP 1: Level, Search & Category Selection View -->
+        <section id="selectionView" class="space-y-6">
+            
+            <!-- Banner & Search Box -->
+            <div class="bg-gradient-to-r from-brand-purple via-indigo-600 to-brand-blue rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden">
+                <div class="absolute right-0 top-0 translate-x-4 -translate-y-4 opacity-20 pointer-events-none text-9xl">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                </div>
+                <div class="relative z-10 max-w-2xl">
+                    <span class="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">AI English-Thai Dictionary</span>
+                    <h2 class="text-2xl md:text-4xl font-bold font-kids mt-2 mb-3">ค้นหาคำศัพท์ใดๆ ด้วย AI Dictionary 🔍</h2>
+                    <p class="text-blue-100 text-sm md:text-base leading-relaxed mb-4">พิมพ์ค้นหาคำศัพท์ภาษาอังกฤษได้มากกว่า 150,000+ คำ ระบบ AI จะดึงคำแปล คำอ่าน ประโยคตัวอย่าง และสร้าง Flashcard ให้อัตโนมัติ!</p>
+                    
+                    <!-- Search Input Bar -->
+                    <form onsubmit="handleDictionarySearch(event)" class="flex flex-col sm:flex-row gap-2">
+                        <div class="relative flex-1">
+                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="searchInput" placeholder="พิมพ์คำศัพท์ภาษาอังกฤษ (เช่น resilient, astronaut, butterfly)..." class="w-full pl-11 pr-4 py-3.5 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-brand-yellow font-medium shadow-inner">
+                        </div>
+                        <button type="submit" id="searchBtn" class="bg-brand-yellow hover:bg-amber-400 text-slate-900 font-bold px-6 py-3.5 rounded-2xl shadow-md transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>ค้นหาด้วย AI</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Loading Indicator for Search -->
+            <div id="searchLoading" class="hidden bg-white rounded-2xl p-6 text-center border-2 border-brand-yellow shadow-md animate-pulse">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-brand-purple mb-3"></i>
+                <p class="font-bold text-slate-700">กำลังค้นหาในพจนานุกรม และสร้างข้อมูลการเรียนรู้ด้วย AI...</p>
+                <p class="text-xs text-slate-400 mt-1">โปรดรอสักครู่ (คำอ่าน, คำแปล, ประโยคตัวอย่าง, รูปภาพ Emoji)</p>
+            </div>
+
+            <!-- Grade Level Selector -->
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-lg font-bold text-slate-700 flex items-center">
+                        <i class="fa-solid fa-layer-group text-brand-pink mr-2"></i> เลือกระดับชั้นปี (Grade Level)
+                    </h3>
+                    <button onclick="generateMoreWordsForGrade()" class="text-xs font-bold bg-emerald-50 text-brand-green hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus-circle"></i>
+                        <span>สุ่มสร้างคำศัพท์ใหม่ด้วย AI</span>
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-2.5" id="gradeButtonsContainer">
+                    <!-- Dynamic Grade Buttons -->
+                </div>
+            </div>
+
+            <!-- Category Selector -->
+            <div>
+                <h3 class="text-lg font-bold text-slate-700 mb-3 flex items-center">
+                    <i class="fa-solid fa-icons text-brand-green mr-2"></i> เลือกหมวดหมู่คำศัพท์ (Category)
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3" id="categoryButtonsContainer">
+                    <!-- Dynamic Category Buttons -->
+                </div>
+            </div>
+
+            <!-- Start Mode Actions -->
+            <div class="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
+                <button onclick="startApp('study')" class="flex-1 max-w-xs bg-brand-green hover:bg-emerald-500 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-emerald-200 transition transform active:scale-95 flex items-center justify-center text-lg space-x-2">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>เข้าสู่โหมดเรียนรู้</span>
+                </button>
+                <button onclick="startApp('quiz')" class="flex-1 max-w-xs bg-brand-pink hover:bg-rose-500 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-rose-200 transition transform active:scale-95 flex items-center justify-center text-lg space-x-2">
+                    <i class="fa-solid fa-gamepad"></i>
+                    <span>เข้าสู่โหมดแบบทดสอบ</span>
+                </button>
+            </div>
+
+        </section>
+
+        <!-- STEP 2: Study Flashcard View -->
+        <section id="studyView" class="hidden space-y-6 max-w-xl mx-auto">
+            <!-- Header Bar inside Study Mode -->
+            <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                <button onclick="backToSelection()" class="text-slate-500 hover:text-slate-800 font-bold text-sm flex items-center">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> หน้าหลัก
+                </button>
+                <div class="text-center">
+                    <span id="studyModeBadge" class="bg-purple-100 text-brand-purple text-xs font-bold px-3 py-1 rounded-full">ป.1 - หมวดสัตว์</span>
+                </div>
+                <button onclick="toggleFavoriteCurrentWord()" id="favBtn" class="text-amber-400 hover:text-amber-500 font-bold text-lg">
+                    <i class="fa-regular fa-star" id="favIcon"></i>
+                </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="space-y-1">
+                <div class="flex justify-between text-xs font-bold text-slate-500 px-1">
+                    <span>ความคืบหน้าคำศัพท์</span>
+                    <span id="studyProgressText">1 / 10</span>
+                </div>
+                <div class="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
+                    <div id="studyProgressBar" class="bg-brand-green h-full transition-all duration-300 w-0"></div>
+                </div>
+            </div>
+
+            <!-- The Interactive 3D Flashcard Container -->
+            <div class="perspective-1000 w-full h-[400px] cursor-pointer group" onclick="flipCard()">
+                <div id="flashcard" class="transform-style-3d relative w-full h-full rounded-3xl shadow-xl transition-transform duration-500">
+                    
+                    <!-- Front Side -->
+                    <div class="backface-hidden absolute inset-0 w-full h-full bg-white border-4 border-brand-yellow rounded-3xl p-6 flex flex-col justify-between items-center text-center">
+                        <div class="w-full flex justify-between items-center text-slate-400 text-xs">
+                            <span id="cardPos" class="font-bold text-brand-purple bg-purple-50 px-2.5 py-1 rounded-lg">noun</span>
+                            <button onclick="event.stopPropagation(); speakCurrentWord();" class="w-9 h-9 bg-yellow-100 text-amber-700 rounded-full flex items-center justify-center hover:bg-yellow-200 transition">
+                                <i class="fa-solid fa-volume-high"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="my-auto flex flex-col items-center">
+                            <span id="cardEmoji" class="text-7xl md:text-8xl mb-3 animate-float">🐶</span>
+                            <h2 id="cardEnglish" class="text-3xl md:text-4xl font-bold font-kids text-slate-800 tracking-wide">DOG</h2>
+                            <p id="cardPhonetic" class="text-slate-400 font-mono text-sm mt-1">[ด็อก]</p>
+                        </div>
+
+                        <div class="text-xs text-brand-blue font-bold flex items-center bg-blue-50 px-3 py-1.5 rounded-full">
+                            <i class="fa-solid fa-hand-pointer mr-1.5"></i> แตะการ์ดเพื่อดูความหมายและตัวอย่าง
+                        </div>
+                    </div>
+
+                    <!-- Back Side -->
+                    <div class="backface-hidden rotate-y-180 absolute inset-0 w-full h-full bg-gradient-to-br from-brand-purple to-indigo-700 text-white rounded-3xl p-6 flex flex-col justify-between items-center text-center">
+                        <div class="w-full flex justify-between items-center text-purple-200 text-xs">
+                            <span>คำแปล & รายละเอียดคำศัพท์</span>
+                            <button onclick="event.stopPropagation(); speakCurrentWord();" class="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition">
+                                <i class="fa-solid fa-volume-high text-white"></i>
+                            </button>
+                        </div>
+
+                        <div class="my-auto space-y-2.5 w-full">
+                            <h3 id="cardThai" class="text-2xl md:text-3xl font-bold">สุนัข / หมา</h3>
+                            <div class="w-12 h-1 bg-brand-yellow mx-auto rounded-full"></div>
+                            <div class="bg-white/10 p-3 rounded-2xl backdrop-blur-sm w-full text-left">
+                                <p class="text-[11px] text-purple-200 mb-0.5">ตัวอย่างประโยค:</p>
+                                <p id="cardExampleEn" class="text-xs md:text-sm font-kids font-semibold text-yellow-300">"This is a loyal dog."</p>
+                                <p id="cardExampleTh" class="text-[11px] text-slate-100 mt-0.5">"นี่คือสุนัขที่ซื่อสัตย์"</p>
+                            </div>
+                            <p id="cardNotes" class="text-[11px] text-purple-200 italic line-clamp-2">คำอธิบายเพิ่มเติมหรือสำนวน</p>
+                        </div>
+
+                        <div class="text-xs text-purple-200 font-medium flex items-center">
+                            <i class="fa-solid fa-rotate mr-1"></i> แตะเพื่อพลิกกลับด้านหน้า
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Navigation Controls -->
+            <div class="flex items-center justify-between gap-4 pt-2">
+                <button onclick="prevCard()" class="flex-1 bg-white hover:bg-slate-100 text-slate-700 font-bold py-3.5 px-4 rounded-2xl border border-slate-200 shadow-md flex items-center justify-center space-x-2 transition">
+                    <i class="fa-solid fa-chevron-left"></i>
+                    <span>ย้อนกลับ</span>
+                </button>
+                <button onclick="speakCurrentWord()" class="w-14 h-14 bg-brand-yellow hover:bg-amber-400 text-amber-900 font-bold rounded-2xl shadow-md flex items-center justify-center text-xl transition transform active:scale-90">
+                    <i class="fa-solid fa-volume-high"></i>
+                </button>
+                <button onclick="nextCard()" class="flex-1 bg-brand-blue hover:bg-blue-600 text-white font-bold py-3.5 px-4 rounded-2xl shadow-md flex items-center justify-center space-x-2 transition">
+                    <span>ถัดไป</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+
+        </section>
+
+        <!-- STEP 3: Quiz Mode View -->
+        <section id="quizView" class="hidden space-y-6 max-w-xl mx-auto">
+            <!-- Quiz Top Bar -->
+            <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                <button onclick="backToSelection()" class="text-slate-500 hover:text-slate-800 font-bold text-sm flex items-center">
+                    <i class="fa-solid fa-xmark mr-2 text-lg"></i> ออก
+                </button>
+                <div class="flex items-center space-x-3">
+                    <span id="quizTypeBadge" class="bg-pink-100 text-brand-pink text-xs font-bold px-2.5 py-1 rounded-full">Multiple Choice</span>
+                    <span class="text-xs text-slate-400 font-bold">คะแนน: <span id="quizScoreText" class="text-lg font-bold text-brand-purple font-kids">0</span></span>
+                </div>
+            </div>
+
+            <!-- Quiz Question Box -->
+            <div class="bg-white rounded-3xl p-6 shadow-xl border-4 border-brand-pink text-center space-y-4 relative overflow-hidden">
+                <div class="flex justify-between items-center text-xs text-slate-400">
+                    <span id="quizQuestionNum" class="font-bold">ข้อที่ 1 / 10</span>
+                    <button onclick="toggleQuizType()" class="text-brand-purple hover:underline font-bold">สลับประเภทควิซ <i class="fa-solid fa-arrows-rotate"></i></button>
+                </div>
+
+                <div class="py-2">
+                    <span id="quizEmoji" class="text-7xl mb-2 inline-block animate-bounce">🐱</span>
+                    <div class="flex items-center justify-center space-x-3">
+                        <h2 id="quizWord" class="text-3xl md:text-4xl font-bold font-kids text-slate-800">CAT</h2>
+                        <button onclick="speakText(currentQuizItem.word)" class="w-9 h-9 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full flex items-center justify-center transition">
+                            <i class="fa-solid fa-volume-high"></i>
+                        </button>
+                    </div>
+                    <p id="quizPhonetic" class="text-slate-400 font-mono text-sm mt-1">[แคท]</p>
+                </div>
+
+                <p id="quizPromptText" class="text-slate-600 font-medium text-sm border-t border-slate-100 pt-3">เลือกคำแปลภาษาไทยที่ถูกต้องที่สุด:</p>
+            </div>
+
+            <!-- Quiz Options Container (Choice Mode) -->
+            <div id="quizOptionsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <!-- Dynamic Choices JS -->
+            </div>
+
+            <!-- Quiz Spelling Container (Spelling Mode) -->
+            <div id="quizSpellingContainer" class="hidden bg-white p-6 rounded-3xl border-2 border-slate-200 shadow-md space-y-4 text-center">
+                <p class="text-xs text-slate-500 font-bold">พิมพ์คำศัพท์ภาษาอังกฤษให้ถูกต้องตรงกับคำแปล</p>
+                <form onsubmit="handleSpellingSubmit(event)" class="flex gap-2">
+                    <input type="text" id="spellingInput" placeholder="พิมพ์คำศัพท์ภาษาอังกฤษ..." class="flex-1 px-4 py-3 border-2 border-slate-200 rounded-2xl text-center font-bold text-lg focus:outline-none focus:border-brand-purple uppercase" autocomplete="off">
+                    <button type="submit" class="bg-brand-purple hover:bg-purple-700 text-white font-bold px-6 py-3 rounded-2xl shadow-md transition">ส่ง</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- STEP 4: Quiz Result Modal / Screen -->
+        <section id="resultView" class="hidden max-w-md mx-auto bg-white rounded-3xl p-8 shadow-2xl border-4 border-brand-yellow text-center space-y-6">
+            <div class="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mx-auto text-yellow-500 text-5xl">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-bold font-kids text-slate-800">จบแบบทดสอบแล้ว! 🎉</h2>
+                <p class="text-slate-500 text-sm mt-1">คุณทำคะแนนในรอบนี้ได้</p>
+            </div>
+
+            <div class="bg-slate-50 py-4 rounded-2xl border border-slate-200">
+                <div class="text-4xl font-extrabold text-brand-purple font-kids" id="finalScoreDisplay">8 / 10</div>
+                <p class="text-xs text-slate-400 font-semibold mt-1" id="finalFeedbackText">ยอดเยี่ยมมาก! เรียนรู้เพิ่มเติมเพื่อเพิ่มความแม่นยำนะ</p>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <button onclick="startApp('quiz')" class="w-full bg-brand-pink hover:bg-rose-500 text-white font-bold py-3.5 rounded-2xl shadow-md transition">
+                    <i class="fa-solid fa-rotate-right mr-2"></i> ลองใหม่อีกครั้ง
+                </button>
+                <button onclick="backToSelection()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3.5 rounded-2xl transition">
+                    <i class="fa-solid fa-house mr-2"></i> กลับหน้าหลัก
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
+        <p>Flashcard English for Primary Students (P.1 - P.6) &bull; Powered by Gemini 2.5 Flash API</p>
+    </footer>
+
+    <!-- Audio Effects Script & Gemini API Integration -->
+    <script>
+        /* =======================================================
+           1. VOCABULARY DATABASE & LOCALSTORAGE INITIALIZATION
+           ======================================================= */
+        const DEFAULT_VOCABULARY = [
+            // P.1
+            { id: 1, grade: "P1", cat: "animals", word: "Cat", thai: "แมว", phonetic: "แคท", pos: "noun", emoji: "🐱", sentence: "The cat is sleeping.", sentenceTh: "แมวกำลังนอนหลับ", notes: "คำศัพท์พื้นฐานสัตว์เลี้ยง" },
+            { id: 2, grade: "P1", cat: "animals", word: "Dog", thai: "สุนัข / หมา", phonetic: "ด็อก", pos: "noun", emoji: "🐶", sentence: "I have a small dog.", sentenceTh: "ฉันมีสุนัขตัวเล็กหนึ่งตัว", notes: "คำศัพท์สัตว์เลี้ยงยอดนิยม" },
+            { id: 3, grade: "P1", cat: "body", word: "Eye", thai: "ดวงตา", phonetic: "อาย", pos: "noun", emoji: "👁️", sentence: "I see with my eyes.", sentenceTh: "ฉันมองเห็นด้วยตาของฉัน", notes: "อวัยวะรับสัมผัสการมองเห็น" },
+            { id: 4, grade: "P1", cat: "food", word: "Apple", thai: "แอปเปิ้ล", phonetic: "แอปเปิ้ล", pos: "noun", emoji: "🍎", sentence: "An apple a day.", sentenceTh: "กินแอปเปิ้ลวันละผล", notes: "ผลไม้ที่มีวิตามินสูง" },
+            { id: 5, grade: "P1", cat: "school", word: "Book", thai: "หนังสือ", phonetic: "บุ๊ค", pos: "noun", emoji: "📖", sentence: "Open your English book.", sentenceTh: "เปิดหนังสือภาษาอังกฤษของคุณ", notes: "อุปกรณ์การเรียน" },
+            
+            // P.2
+            { id: 6, grade: "P2", cat: "animals", word: "Rabbit", thai: "กระต่าย", phonetic: "แรบบิท", pos: "noun", emoji: "🐰", sentence: "The rabbit likes carrots.", sentenceTh: "กระต่ายชอบกินแครอท", notes: "สัตว์ฟันแทะหูยาว" },
+            { id: 7, grade: "P2", cat: "food", word: "Banana", thai: "กล้วย", phonetic: "บะแนนนะ", pos: "noun", emoji: "🍌", sentence: "Monkeys love bananas.", sentenceTh: "ลิงชอบกินกล้วย", notes: "ผลไม้สีเหลืองอุดมโปรแตสเซียม" },
+            { id: 8, grade: "P2", cat: "verbs", word: "Swim", thai: "ว่ายน้ำ", phonetic: "สวิม", pos: "verb", emoji: "🏊", sentence: "I swim in the pool.", sentenceTh: "ฉันว่ายน้ำในสระ", notes: "การออกกำลังกายในน้ำ" },
+
+            // P.3
+            { id: 9, grade: "P3", cat: "animals", word: "Elephant", thai: "ช้าง", phonetic: "เอลเลิฟเฟินท์", pos: "noun", emoji: "🐘", sentence: "The elephant is huge.", sentenceTh: "ช้างมีขนาดใหญ่มาก", notes: "สัตว์บกที่ใหญ่ที่สุด" },
+            { id: 10, grade: "P3", cat: "verbs", word: "Read", thai: "อ่าน", phonetic: "รีด", pos: "verb", emoji: "📚", sentence: "She reads books every day.", sentenceTh: "เธออ่านหนังสือทุกวัน", notes: "ทักษะการเรียนรู้" },
+
+            // P.4
+            { id: 11, grade: "P4", cat: "animals", word: "Dolphin", thai: "โลมา", phonetic: "ดอลฟิน", pos: "noun", emoji: "🐬", sentence: "Dolphins are smart animals.", sentenceTh: "โลมาเป็นสัตว์ที่ฉลาด", notes: "สัตว์เลี้ยงลูกด้วยนมในทะเล" },
+            { id: 12, grade: "P4", cat: "school", word: "Library", thai: "ห้องสมุด", phonetic: "ไลแบร รี", pos: "noun", emoji: "🏫", sentence: "Be quiet in the library.", sentenceTh: "เงียบสงบในห้องสมุด", notes: "สถานที่ยืมอ่านหนังสือ" },
+
+            // P.5
+            { id: 13, grade: "P5", cat: "animals", word: "Cheetah", thai: "เสือชีตาห์", phonetic: "ชีต้าห์", pos: "noun", emoji: "🐆", sentence: "A cheetah runs very fast.", sentenceTh: "เสือชีตาห์วิ่งเร็วมาก", notes: "สัตว์บกที่วิ่งเร็วที่สุด" },
+            { id: 14, grade: "P5", cat: "body", word: "Brain", thai: "สมอง", phonetic: "เบรน", pos: "noun", emoji: "🧠", sentence: "Use your brain to solve problems.", sentenceTh: "ใช้สมองแก้ปัญหา", notes: "ศูนย์กลางการสั่งการของร่างกาย" },
+
+            // P.6
+            { id: 15, grade: "P6", cat: "animals", word: "Chameleon", thai: "กิ้งก่าเปลี่ยนสี", phonetic: "คะมีเลียน", pos: "noun", emoji: "🦎", sentence: "Chameleons change their color.", sentenceTh: "กิ้งก่าเปลี่ยนสีตามสภาพแวดล้อม", notes: "สัตว์เลื้อยคลานที่พรางตัวได้" },
+            { id: 16, grade: "P6", cat: "verbs", word: "Communicate", thai: "สื่อสาร", phonetic: "คอมมูนิเคต", pos: "verb", emoji: "🗣️", sentence: "We communicate in English.", sentenceTh: "พวกเราสื่อสารด้วยภาษาอังกฤษ", notes: "การแลกเปลี่ยนข้อมูลข่าวสาร" }
+        ];
+
+        // Load custom or AI generated words from LocalStorage
+        let VOCABULARY = [...DEFAULT_VOCABULARY];
+        let favoriteIds = new Set(JSON.parse(localStorage.getItem('kids_fav_words') || '[]'));
+
+        function loadSavedVocab() {
+            const saved = localStorage.getItem('kids_custom_vocab');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed)) {
+                        VOCABULARY = [...DEFAULT_VOCABULARY, ...parsed];
+                    }
+                } catch(e) {
+                    console.error("Failed to load saved vocabulary", e);
+                }
+            }
+        }
+        loadSavedVocab();
+
+        function saveCustomWordToStorage(wordObj) {
+            let customSaved = JSON.parse(localStorage.getItem('kids_custom_vocab') || '[]');
+            // Avoid duplicate words
+            if (!customSaved.some(w => w.word.toLowerCase() === wordObj.word.toLowerCase())) {
+                customSaved.push(wordObj);
+                localStorage.setItem('kids_custom_vocab', JSON.stringify(customSaved));
+                VOCABULARY.push(wordObj);
+            }
+        }
+
+        const GRADES = [
+            { id: 'all', label: 'ทุกระดับชั้น' },
+            { id: 'P1', label: 'ป.1' },
+            { id: 'P2', label: 'ป.2' },
+            { id: 'P3', label: 'ป.3' },
+            { id: 'P4', label: 'ป.4' },
+            { id: 'P5', label: 'ป.5' },
+            { id: 'P6', label: 'ป.6' },
+            { id: 'fav', label: '⭐ คำที่บันทึก' }
+        ];
+
+        const CATEGORIES = [
+            { id: 'all', label: 'ทุกหมวดหมู่', icon: 'fa-border-all', color: 'bg-slate-500' },
+            { id: 'animals', label: 'สัตว์ (Animals)', icon: 'fa-paw', color: 'bg-emerald-500' },
+            { id: 'body', label: 'ร่างกาย (Body)', icon: 'fa-child', color: 'bg-rose-500' },
+            { id: 'food', label: 'อาหาร (Food)', icon: 'fa-utensils', color: 'bg-amber-500' },
+            { id: 'school', label: 'โรงเรียน (School)', icon: 'fa-school', color: 'bg-blue-500' },
+            { id: 'verbs', label: 'คำกริยา (Verbs)', icon: 'fa-bolt', color: 'bg-purple-500' }
+        ];
+
+        /* =======================================================
+           2. GEMINI API REAL-TIME DICTIONARY LOOKUP & GENERATOR
+           ======================================================= */
+        async function callGeminiApiForWord(promptText) {
+            const apiKey = process.env.GEMINI_API_KEY || "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+            const systemInstruction = `You are a professional English-Thai Dictionary for Primary School kids in Thailand. 
+Return ONLY valid JSON matching the schema below. Do not wrap in markdown quotes if possible or return strictly pure JSON.`;
+
+            const schema = {
+                type: "OBJECT",
+                properties: {
+                    word: { type: "STRING" },
+                    thai: { type: "STRING" },
+                    phonetic: { type: "STRING", description: "Thai phonetic reading guide e.g. อะไลฟ์" },
+                    pos: { type: "STRING", description: "Part of speech e.g. noun, verb, adjective" },
+                    grade: { type: "STRING", description: "Suitability level: P1, P2, P3, P4, P5, P6 or Advanced" },
+                    cat: { type: "STRING", description: "One of: animals, body, food, school, verbs, general" },
+                    emoji: { type: "STRING", description: "Single relevant emoji icon" },
+                    sentence: { type: "STRING", description: "Simple example sentence in English" },
+                    sentenceTh: { type: "STRING", description: "Thai translation of the example sentence" },
+                    notes: { type: "STRING", description: "Short memory tip or idiom explanation in Thai" }
+                },
+                required: ["word", "thai", "phonetic", "pos", "grade", "cat", "emoji", "sentence", "sentenceTh"]
+            };
+
+            const payload = {
+                contents: [{ parts: [{ text: promptText }] }],
+                systemInstruction: { parts: [{ text: systemInstruction }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: schema
+                }
+            };
+
+            let response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error(`Gemini API Error: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!jsonText) throw new Error("No response from Gemini API");
+
+            return JSON.parse(jsonText);
+        }
+
+        async function handleDictionarySearch(e) {
+            if (e) e.preventDefault();
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) return;
+
+            const loadingEl = document.getElementById('searchLoading');
+            loadingEl.classList.remove('hidden');
+
+            try {
+                const prompt = `Provide dictionary data for the English word/phrase "${query}" for elementary students.`;
+                const wordData = await callGeminiApiForWord(prompt);
+                
+                wordData.id = Date.now();
+                saveCustomWordToStorage(wordData);
+                
+                // Set grade/category to view this searched word
+                selectedGrade = 'all';
+                selectedCategory = 'all';
+                renderGradeButtons();
+                renderCategoryButtons();
+                filterWords();
+
+                // Find index of newly added word
+                const idx = filteredWords.findIndex(w => w.word.toLowerCase() === wordData.word.toLowerCase());
+                if (idx !== -1) currentIndex = idx;
+
+                document.getElementById('searchInput').value = '';
+                startApp('study');
+            } catch (error) {
+                alert("ไม่สามารถค้นหาคำศัพท์ได้ชั่วคราว: " + error.message);
+            } finally {
+                loadingEl.classList.add('hidden');
+            }
+        }
+
+        async function generateMoreWordsForGrade() {
+            const currentG = selectedGrade === 'all' || selectedGrade === 'fav' ? 'P3' : selectedGrade;
+            const loadingEl = document.getElementById('searchLoading');
+            loadingEl.classList.remove('hidden');
+
+            try {
+                const prompt = `Generate 1 unique, fun, useful English vocabulary word suitable for Grade ${currentG} (ป.${currentG.replace('P','')}) Thai elementary student that is not very common.`;
+                const wordData = await callGeminiApiForWord(prompt);
+                
+                wordData.id = Date.now();
+                wordData.grade = currentG;
+                saveCustomWordToStorage(wordData);
+
+                filterWords();
+                alert(`✨ AI สร้างคำศัพท์ใหม่สำเร็จ: ${wordData.word} (${wordData.thai}) เพิ่มเข้าสู่คลังแล้ว!`);
+            } catch (error) {
+                alert("เกิดข้อผิดพลาดในการสร้างคำศัพท์: " + error.message);
+            } finally {
+                loadingEl.classList.add('hidden');
+            }
+        }
+
+        /* =======================================================
+           3. STATE MANAGEMENT & AUDIO SYNTH SETUP
+           ======================================================= */
+        let selectedGrade = 'P1';
+        let selectedCategory = 'all';
+        let filteredWords = [];
+        let currentIndex = 0;
+        let isFlipped = false;
+        let isMuted = false;
+        let speechRate = 0.85; // Normal kids speed
+        let userTotalScore = 0;
+
+        // Quiz State
+        let quizScore = 0;
+        let currentQuizItem = null;
+        let quizModeType = 'choice'; // 'choice' or 'spelling'
+
+        // Tone.js Synth for Game Sound Effects
+        let synth;
+        try {
+            synth = new Tone.Synth().toDestination();
+        } catch (e) {
+            console.log("Audio Context deferred");
+        }
+
+        function playSound(type) {
+            if (isMuted) return;
+            try {
+                if (Tone.context.state !== 'running') Tone.start();
+                if (type === 'correct') {
+                    synth.triggerAttackRelease("C5", "8n");
+                    setTimeout(() => synth.triggerAttackRelease("E5", "8n"), 100);
+                    setTimeout(() => synth.triggerAttackRelease("G5", "8n"), 200);
+                } else if (type === 'wrong') {
+                    synth.triggerAttackRelease("G3", "8n");
+                    setTimeout(() => synth.triggerAttackRelease("C3", "8n"), 150);
+                } else if (type === 'click') {
+                    synth.triggerAttackRelease("C4", "16n");
+                }
+            } catch (err) {}
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            const soundIcon = document.getElementById('soundIcon');
+            soundIcon.className = isMuted ? 'fa-solid fa-volume-xmark text-red-500 text-lg' : 'fa-solid fa-volume-high text-lg';
+            if (!isMuted) playSound('click');
+        }
+
+        function toggleSpeechSpeed() {
+            if (speechRate === 0.85) {
+                speechRate = 0.5;
+                document.getElementById('speechSpeedText').innerText = 'เร็ว: ช้ามาก';
+            } else {
+                speechRate = 0.85;
+                document.getElementById('speechSpeedText').innerText = 'เร็ว: ปกติ';
+            }
+            playSound('click');
+        }
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = speechRate;
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function speakCurrentWord() {
+            if (filteredWords.length > 0 && filteredWords[currentIndex]) {
+                speakText(filteredWords[currentIndex].word);
+            }
+        }
+
+        /* =======================================================
+           4. UI RENDER FUNCTIONS
+           ======================================================= */
+        window.onload = function() {
+            renderGradeButtons();
+            renderCategoryButtons();
+            filterWords();
+        };
+
+        function renderGradeButtons() {
+            const container = document.getElementById('gradeButtonsContainer');
+            container.innerHTML = '';
+            GRADES.forEach(g => {
+                const isSelected = selectedGrade === g.id;
+                const btn = document.createElement('button');
+                btn.className = `py-2.5 px-3 rounded-2xl font-bold text-xs md:text-sm border-2 transition text-center ${
+                    isSelected 
+                    ? 'bg-brand-purple text-white border-brand-purple shadow-md scale-105' 
+                    : 'bg-white text-slate-700 border-slate-200 hover:border-brand-purple'
+                }`;
+                btn.innerText = g.label;
+                btn.onclick = () => {
+                    selectedGrade = g.id;
+                    playSound('click');
+                    renderGradeButtons();
+                    filterWords();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function renderCategoryButtons() {
+            const container = document.getElementById('categoryButtonsContainer');
+            container.innerHTML = '';
+            CATEGORIES.forEach(c => {
+                const isSelected = selectedCategory === c.id;
+                const btn = document.createElement('button');
+                btn.className = `p-3 rounded-2xl font-bold border-2 transition flex items-center space-x-3 text-left ${
+                    isSelected 
+                    ? 'bg-brand-blue text-white border-brand-blue shadow-md scale-102' 
+                    : 'bg-white text-slate-700 border-slate-200 hover:border-brand-blue'
+                }`;
+                btn.innerHTML = `
+                    <div class="w-8 h-8 rounded-xl ${c.color} text-white flex items-center justify-center text-sm shadow-sm">
+                        <i class="fa-solid ${c.icon}"></i>
+                    </div>
+                    <span class="text-xs md:text-sm font-kids">${c.label}</span>
+                `;
+                btn.onclick = () => {
+                    selectedCategory = c.id;
+                    playSound('click');
+                    renderCategoryButtons();
+                    filterWords();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function filterWords() {
+            filteredWords = VOCABULARY.filter(item => {
+                let matchGrade = false;
+                if (selectedGrade === 'all') matchGrade = true;
+                else if (selectedGrade === 'fav') matchGrade = favoriteIds.has(item.id);
+                else matchGrade = (item.grade === selectedGrade);
+
+                const matchCat = (selectedCategory === 'all') || (item.cat === selectedCategory);
+                return matchGrade && matchCat;
+            });
+            currentIndex = 0;
+        }
+
+        /* =======================================================
+           5. NAVIGATION & VIEW SWITCHING
+           ======================================================= */
+        function hideAllViews() {
+            document.getElementById('selectionView').classList.add('hidden');
+            document.getElementById('studyView').classList.add('hidden');
+            document.getElementById('quizView').classList.add('hidden');
+            document.getElementById('resultView').classList.add('hidden');
+        }
+
+        function resetToHome() {
+            hideAllViews();
+            document.getElementById('selectionView').classList.remove('hidden');
+        }
+
+        function backToSelection() {
+            playSound('click');
+            hideAllViews();
+            document.getElementById('selectionView').classList.remove('hidden');
+        }
+
+        function startApp(mode) {
+            filterWords();
+            if (filteredWords.length === 0) {
+                alert('ไม่พบคำศัพท์ในระดับชั้นและหมวดหมู่นี้ กรุณาเลือกใหม่ หรือกดค้นหา/สร้างคำศัพท์เพิ่มเติม!');
+                return;
+            }
+
+            playSound('click');
+            hideAllViews();
+
+            if (mode === 'study') {
+                document.getElementById('studyView').classList.remove('hidden');
+                updateStudyCard();
+            } else if (mode === 'quiz') {
+                quizScore = 0;
+                document.getElementById('quizScoreText').innerText = quizScore;
+                document.getElementById('quizView').classList.remove('hidden');
+                nextQuizQuestion();
+            }
+        }
+
+        /* =======================================================
+           6. FLASHCARD STUDY MODE
+           ======================================================= */
+        function updateStudyCard() {
+            isFlipped = false;
+            document.getElementById('flashcard').classList.remove('rotate-y-180');
+
+            const item = filteredWords[currentIndex];
+            const gradeLabel = GRADES.find(g => g.id === selectedGrade)?.label || selectedGrade;
+            const catLabel = CATEGORIES.find(c => c.id === selectedCategory)?.label || selectedCategory;
+            
+            document.getElementById('studyModeBadge').innerText = `${gradeLabel} • ${catLabel}`;
+            document.getElementById('cardEmoji').innerText = item.emoji || '📖';
+            document.getElementById('cardEnglish').innerText = item.word;
+            document.getElementById('cardPhonetic').innerText = `[${item.phonetic || item.word}]`;
+            document.getElementById('cardPos').innerText = item.pos || 'noun';
+            document.getElementById('cardThai').innerText = item.thai;
+            document.getElementById('cardExampleEn').innerText = `"${item.sentence || ''}"`;
+            document.getElementById('cardExampleTh').innerText = `"${item.sentenceTh || ''}"`;
+            document.getElementById('cardNotes').innerText = item.notes ? `💡 ${item.notes}` : '';
+
+            // Fav icon state
+            const favIcon = document.getElementById('favIcon');
+            if (favoriteIds.has(item.id)) {
+                favIcon.className = "fa-solid fa-star text-amber-400";
+            } else {
+                favIcon.className = "fa-regular fa-star text-slate-400";
+            }
+
+            // Progress bar
+            const progress = ((currentIndex + 1) / filteredWords.length) * 100;
+            document.getElementById('studyProgressBar').style.width = `${progress}%`;
+            document.getElementById('studyProgressText').innerText = `${currentIndex + 1} / ${filteredWords.length}`;
+
+            speakCurrentWord();
+        }
+
+        function toggleFavoriteCurrentWord() {
+            if (filteredWords.length === 0) return;
+            const currentItem = filteredWords[currentIndex];
+            if (favoriteIds.has(currentItem.id)) {
+                favoriteIds.delete(currentItem.id);
+            } else {
+                favoriteIds.add(currentItem.id);
+            }
+            localStorage.setItem('kids_fav_words', JSON.stringify([...favoriteIds]));
+            updateStudyCard();
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            playSound('click');
+            const card = document.getElementById('flashcard');
+            if (isFlipped) {
+                card.classList.add('rotate-y-180');
+            } else {
+                card.classList.remove('rotate-y-180');
+            }
+        }
+
+        function nextCard() {
+            playSound('click');
+            if (currentIndex < filteredWords.length - 1) currentIndex++;
+            else currentIndex = 0;
+            updateStudyCard();
+        }
+
+        function prevCard() {
+            playSound('click');
+            if (currentIndex > 0) currentIndex--;
+            else currentIndex = filteredWords.length - 1;
+            updateStudyCard();
+        }
+
+        /* =======================================================
+           7. QUIZ MODE & SPELLING TEST LOGIC
+           ======================================================= */
+        let quizQuestionsQueue = [];
+        let currentQuestionIndex = 0;
+
+        function toggleQuizType() {
+            quizModeType = quizModeType === 'choice' ? 'spelling' : 'choice';
+            document.getElementById('quizTypeBadge').innerText = quizModeType === 'choice' ? 'Multiple Choice' : 'Spelling Test';
+            playSound('click');
+            renderQuizInterface();
+        }
+
+        function nextQuizQuestion() {
+            if (quizQuestionsQueue.length === 0 || currentQuestionIndex >= quizQuestionsQueue.length) {
+                quizQuestionsQueue = [...filteredWords].sort(() => 0.5 - Math.random()).slice(0, 10);
+                currentQuestionIndex = 0;
+            }
+
+            if (currentQuestionIndex >= quizQuestionsQueue.length) {
+                showQuizResult();
+                return;
+            }
+
+            currentQuizItem = quizQuestionsQueue[currentQuestionIndex];
+            renderQuizInterface();
+        }
+
+        function renderQuizInterface() {
+            document.getElementById('quizQuestionNum').innerText = `ข้อที่ ${currentQuestionIndex + 1} / ${quizQuestionsQueue.length}`;
+            document.getElementById('quizEmoji').innerText = currentQuizItem.emoji || '❓';
+            document.getElementById('quizPhonetic').innerText = `[${currentQuizItem.phonetic || ''}]`;
+
+            const choicesContainer = document.getElementById('quizOptionsContainer');
+            const spellingContainer = document.getElementById('quizSpellingContainer');
+
+            if (quizModeType === 'choice') {
+                choicesContainer.classList.remove('hidden');
+                spellingContainer.classList.add('hidden');
+                document.getElementById('quizWord').innerText = currentQuizItem.word;
+                document.getElementById('quizPromptText').innerText = "เลือกคำแปลภาษาไทยที่ถูกต้องที่สุด:";
+
+                // Choices Generator
+                const choices = [currentQuizItem.thai];
+                const otherWords = VOCABULARY.filter(w => w.thai !== currentQuizItem.thai);
+                const shuffledOthers = otherWords.sort(() => 0.5 - Math.random());
+
+                for (let i = 0; i < 3 && i < shuffledOthers.length; i++) {
+                    choices.push(shuffledOthers[i].thai);
+                }
+                choices.sort(() => 0.5 - Math.random());
+
+                choicesContainer.innerHTML = '';
+                choices.forEach((choiceText) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'w-full bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-brand-pink text-slate-800 font-bold p-4 rounded-2xl shadow-sm text-center transition transform active:scale-95 text-base';
+                    btn.innerText = choiceText;
+                    btn.onclick = () => checkChoiceAnswer(choiceText, btn);
+                    choicesContainer.appendChild(btn);
+                });
+            } else {
+                // Spelling Mode
+                choicesContainer.classList.add('hidden');
+                spellingContainer.classList.remove('hidden');
+                document.getElementById('quizWord').innerText = `"${currentQuizItem.thai}"`;
+                document.getElementById('quizPromptText').innerText = "ฟังเสียงแล้วเขียนสะกดคำศัพท์ภาษาอังกฤษให้ถูกต้อง:";
+                document.getElementById('spellingInput').value = '';
+                document.getElementById('spellingInput').focus();
+            }
+
+            speakText(currentQuizItem.word);
+        }
+
+        function checkChoiceAnswer(selectedChoice, buttonElem) {
+            const buttons = document.querySelectorAll('#quizOptionsContainer button');
+            buttons.forEach(b => b.disabled = true);
+
+            if (selectedChoice === currentQuizItem.thai) {
+                playSound('correct');
+                buttonElem.classList.remove('bg-white', 'border-slate-200');
+                buttonElem.classList.add('bg-emerald-500', 'text-white', 'border-emerald-500');
+                
+                quizScore += 1;
+                userTotalScore += 10;
+                document.getElementById('quizScoreText').innerText = quizScore;
+                document.getElementById('globalScoreDisplay').innerText = userTotalScore;
+            } else {
+                playSound('wrong');
+                buttonElem.classList.remove('bg-white', 'border-slate-200');
+                buttonElem.classList.add('bg-rose-500', 'text-white', 'border-rose-500');
+
+                buttons.forEach(b => {
+                    if (b.innerText === currentQuizItem.thai) {
+                        b.classList.remove('bg-white', 'border-slate-200');
+                        b.classList.add('bg-emerald-500', 'text-white', 'border-emerald-500');
+                    }
+                });
+            }
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < quizQuestionsQueue.length) {
+                    nextQuizQuestion();
+                } else {
+                    showQuizResult();
+                }
+            }, 1400);
+        }
+
+        function handleSpellingSubmit(e) {
+            e.preventDefault();
+            const inputVal = document.getElementById('spellingInput').value.trim().toLowerCase();
+            const correctVal = currentQuizItem.word.trim().toLowerCase();
+
+            if (inputVal === correctVal) {
+                playSound('correct');
+                quizScore += 1;
+                userTotalScore += 10;
+                document.getElementById('quizScoreText').innerText = quizScore;
+                document.getElementById('globalScoreDisplay').innerText = userTotalScore;
+            } else {
+                playSound('wrong');
+                alert(`คำตอบไม่ถูกต้อง! คำศัพท์ที่ถูกต้องคือ "${currentQuizItem.word}"`);
+            }
+
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizQuestionsQueue.length) {
+                nextQuizQuestion();
+            } else {
+                showQuizResult();
+            }
+        }
+
+        function showQuizResult() {
+            hideAllViews();
+            document.getElementById('resultView').classList.remove('hidden');
+            
+            const total = quizQuestionsQueue.length;
+            document.getElementById('finalScoreDisplay').innerText = `${quizScore} / ${total}`;
+
+            const feedback = document.getElementById('finalFeedbackText');
+            if (quizScore === total) {
+                feedback.innerText = "🌟 เพอร์เฟกต์มาก! ได้คะแนนเต็ม 10/10 เก่งที่สุดเลย!";
+            } else if (quizScore >= total * 0.7) {
+                feedback.innerText = "👏 ทำได้ดีมาก! มีความรู้ความเข้าใจคำศัพท์แน่นมาก";
+            } else {
+                feedback.innerText = "💪 พยายามได้ดีแล้ว! ลองกลับไปทบทวนในโหมดเรียนรู้อีกครั้งนะ";
+            }
+        }
+    </script>
+</body>
+</html>
